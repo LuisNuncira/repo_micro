@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Retrospectivas Ágiles</title>
+    <link rel="stylesheet" href="css/index.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="js/datos.js"></script>
+</head>
+<body>
+<div class="container">
+    <h1>Gestor de Retrospectivas Ágiles</h1>
+    <p>Realiza un seguimiento sencillo de los aspectos positivos, negativos y acciones de mejora.</p>
+
+    <div>
+        <button class="btn btn-primary" onclick="mostrarVista('nueva')">Nueva Retrospectiva</button>
+        <button class="btn btn-secondary" onclick="mostrarVista('historial')">Historial</button>
+        <button class="btn btn-success" onclick="mostrarVista('inicio')">Inicio</button>
+    </div>
+
+    <div id="inicio" class="vista">
+        <h2>Inicio</h2>
+        <p>Bienvenido a la herramienta de retrospectivas. Comienza creando una nueva retrospectiva o consulta las registradas.</p>
+    </div>
+
+    <div id="nueva" class="vista" style="display: none;">
+        <h2>Crear Nueva Retrospectiva</h2>
+        <form id="form-retrospectiva">
+            <label for="sprint">Número de Sprint</label>
+            <input type="number" id="sprint" placeholder="Ejemplo: 1" required />
+
+            <label for="positivos">Aspectos Positivos</label>
+            <textarea id="positivos" rows="3" placeholder="Escribe aquí lo positivo"></textarea>
+
+            <label for="negativos">Aspectos Negativos</label>
+            <textarea id="negativos" rows="3" placeholder="Escribe aquí lo negativo"></textarea>
+
+            <label for="acciones">Acciones de Mejora</label>
+            <textarea id="acciones" rows="3" placeholder="Escribe aquí las acciones"></textarea>
+
+            <button class="btn btn-primary" onclick="guardarRetrospectiva(event)">Guardar</button>
+        </form>
+    </div>
+
+
+    <div id="historial" class="vista" style="display: none;">
+        <h2>Historial de Retrospectivas</h2>
+        <div id="lista-historial">
+            <p>No se han registrado retrospectivas aún.</p>
+        </div>
+    </div>
+</div>
+
+
+</body>
+</html>
