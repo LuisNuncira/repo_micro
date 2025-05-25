@@ -1,35 +1,40 @@
 <?php
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SprintController;
 use App\Http\Controllers\RetroItemController;
 
-Route::get('/test', function () {
-    return response()->json(['ok' => true]);
-});
+// Test route
+Route::get('/test', fn() => response()->json(['ok' => true]));
 
-Route::post('/sprints', [SprintController::class, 'store']);
-// Rutas de Sprints
-Route::apiResource('sprints', SprintController::class);
+// --- SPRINTS ---
+Route::apiResource('sprints', SprintController::class)->except(['store']);
+Route::post('sprints', [SprintController::class, 'store']); // Para compatibilidad si es necesario
+Route::get('sprints/activos', [SprintController::class, 'getSprintsActivos']);
+Route::get('sprints/{sprint}/estadisticas', [SprintController::class, 'getEstadisticas']);
+Route::get('estadisticas/general', [SprintController::class, 'getEstadisticasGenerales']);
 
-// Rutas de RetroItems
+// --- RETRO ITEMS ---
 Route::apiResource('retro-items', RetroItemController::class);
 
-// Rutas específicas de items por sprint
-Route::get('sprints/{sprint}/retro-items', [RetroItemController::class, 'getBySprintId']);
-Route::get('sprints/{sprint}/acciones', [RetroItemController::class, 'getAcciones']);
-Route::get('sprints/{sprint}/logros', [RetroItemController::class, 'getLogros']);
-Route::get('sprints/{sprint}/impedimentos', [RetroItemController::class, 'getImpedimentos']);
-Route::get('sprints/{sprint}/comentarios', [RetroItemController::class, 'getComentarios']);
+Route::get('retro-items/categorias', function () {
+    return response()->json([
+        'categorias' => ['accion', 'logro', 'impedimento', 'comentario', 'otro']
+    ]);
+});
+// RetroItems por Sprint y categorías
+Route::prefix('sprints/{sprint}')->group(function () {
+    Route::get('retro-items', [RetroItemController::class, 'getBySprintId']);
+    Route::get('acciones', [RetroItemController::class, 'getAcciones']);
+    Route::get('logros', [RetroItemController::class, 'getLogros']);
+    Route::get('impedimentos', [RetroItemController::class, 'getImpedimentos']);
+    Route::get('comentarios', [RetroItemController::class, 'getComentarios']);
+});
 
-// Funcionalidades específicas para acciones
+// --- ACCIONES ---
 Route::patch('retro-items/{retroItem}/toggle-cumplida', [RetroItemController::class, 'toggleCumplida']);
 Route::get('acciones/pendientes', [RetroItemController::class, 'getAccionesPendientes']);
 Route::get('acciones/cumplidas', [RetroItemController::class, 'getAccionesCumplidas']);
 
-// Estadísticas y reportes
-Route::get('sprints/{sprint}/estadisticas', [SprintController::class, 'getEstadisticas']);
-Route::get('estadisticas/general', [SprintController::class, 'getEstadisticasGenerales']);
-
-// Buscar y filtrar
+// --- BUSCAR Y FILTRAR ---
 Route::get('retro-items/search', [RetroItemController::class, 'search']);
-Route::get('sprints/activos', [SprintController::class, 'getSprintsActivos']);
