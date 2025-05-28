@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
-
+namespace App\Controllers;
+// validacion datos de entrada
+// llamado a services
 use App\Models\RetroItem;
 use App\Models\Sprint;
 use Illuminate\Http\Request;

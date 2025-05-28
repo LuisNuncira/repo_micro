@@ -1,8 +1,8 @@
 <?php
 
+use App\Controllers\RetroItemController;
+use App\Controllers\SprintController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\SprintController;
-use App\Http\Controllers\RetroItemController;
 
 // Test route
 Route::get('/test', fn() => response()->json(['ok' => true]));
