@@ -31,10 +31,10 @@
             <label for="nombre">Nombre del Sprint</label>
             <input type="text" id="nombre" name="nombre" placeholder="Ejemplo: Sprint 1" required>
 
-            <label for="fecha_inicio">Fecha de Inicio</label>
+            <label for="fecha_inicio">Fecha de Inicio:Debe ser Antes de la fecha de fin.</label>
             <input type="date" id="fecha_inicio" name="fecha_inicio" required>
 
-            <label for="fecha_fin">Fecha de Fin</label>
+            <label for="fecha_fin">Fecha de Fin:Debe ser despues de la fecha incio.</label>
             <input type="date" id="fecha_fin" name="fecha_fin" required>
 
             <button class="btn btn-primary" onclick="guardarRetrospectiva(event)">Guardar</button>
