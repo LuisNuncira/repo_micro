@@ -14,7 +14,7 @@
     <p>Realiza un seguimiento sencillo de tus sprints.</p>
 
     <div>
-        <button class="btn btn-primary" onclick="mostrarVista('nueva')">Nueva Retrospectiva</button>
+        <button class="btn btn-primary" onclick="mostrarVista('nueva')">Sprints</button>
         <button class="btn btn-secondary" onclick="mostrarVista('historial')">Historial</button>
         <button class="btn btn-info" onclick="mostrarVista('reporte')">Reporte</button>
         <button class="btn btn-success" onclick="mostrarVista('inicio')">Inicio</button>
@@ -26,7 +26,7 @@
     </div>
 
     <div id="nueva" class="vista" style="display: none;">
-        <h2>Crear Nueva Retrospectiva</h2>
+        <h2>Crear Nuevo Sprint</h2>
         <form id="form-retrospectiva">
             <label for="nombre">Nombre del Sprint</label>
             <input type="text" id="nombre" name="nombre" placeholder="Ejemplo: Sprint 1" required>
@@ -42,9 +42,9 @@
     </div>
 
     <div id="historial" class="vista" style="display: none;">
-        <h2>Historial de Retrospectivas</h2>
+        <h2>Historial de Sprint</h2>
         <div id="lista-historial">
-            <p>No se han registrado retrospectivas aún.</p>
+            <p>No se han registrado Sprint aún.</p>
         </div>
     </div>
 
@@ -54,7 +54,7 @@
             <label for="sprint_id">Selecciona el Sprint</label>
             <select id="sprint_id" name="sprint_id" required>
                 <option value="">-- Selecciona --</option>
-                <!-- Se llena desde JS -->
+
             </select>
 
             <label for="categoria">Categoría</label>
@@ -71,10 +71,7 @@
                 <label for="descripcion">Descripción</label>
                 <textarea id="descripcion" name="descripcion" required></textarea>
 
-                <label>
-                    <input type="checkbox" id="cumplida" name="cumplida">
-                    Cumplida
-                </label>
+
 
                 <label for="fecha_revision">Fecha de Revisión (opcional)</label>
                 <input type="date" id="fecha_revision" name="fecha_revision">
@@ -89,8 +86,12 @@
     <h2>Reporte de Comentarios por Retrospectiva</h2>
     <div id="reporte-comentarios">
         <p>Cargando comentarios...</p>
+
     </div>
+
+
 </div>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
