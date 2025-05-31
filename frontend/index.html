@@ -3,101 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Retrospectivas Ágiles</title>
+    <title>RetroSpect | Gestor de Retrospectivas</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <link rel="stylesheet" href="css/index.css">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="js/datos.js" defer></script>
 </head>
 <body>
-<div class="container">
-    <h1>Gestor de Retrospectivas Ágiles</h1>
-    <p>Realiza un seguimiento sencillo de tus sprints.</p>
+<div class="app-container">
+    <header class="header">
+        <h1>RetroSpect</h1>
+        <p>Gestiona tus retrospectivas ágiles de manera sencilla y efectiva</p>
+    </header>
 
-    <div>
-        <button class="btn btn-primary" onclick="mostrarVista('nueva')">Sprints</button>
+    <div class="navigation">
+        <button class="btn btn-primary" onclick="mostrarVista('inicio')">Inicio</button>
+        <button class="btn btn-primary" onclick="mostrarVista('nueva')">Nuevo Sprint</button>
         <button class="btn btn-secondary" onclick="mostrarVista('historial')">Historial</button>
-        <button class="btn btn-info" onclick="mostrarVista('reporte')">Reporte</button>
-        <button class="btn btn-success" onclick="mostrarVista('inicio')">Inicio</button>
+        <button class="btn btn-success" onclick="mostrarVista('reporte')">Reportes</button>
     </div>
 
-    <div id="inicio" class="vista">
-        <h2>Inicio</h2>
-        <p>Bienvenido a la herramienta de retrospectivas. Comienza creando una nueva o consulta las registradas.</p>
-    </div>
-
-    <div id="nueva" class="vista" style="display: none;">
-        <h2>Crear Nuevo Sprint</h2>
-        <form id="form-retrospectiva">
-            <label for="nombre">Nombre del Sprint</label>
-            <input type="text" id="nombre" name="nombre" placeholder="Ejemplo: Sprint 1" required>
-
-            <label for="fecha_inicio">Fecha de Inicio:Debe ser Antes de la fecha de fin.</label>
-            <input type="date" id="fecha_inicio" name="fecha_inicio" required>
-
-            <label for="fecha_fin">Fecha de Fin:Debe ser despues de la fecha incio.</label>
-            <input type="date" id="fecha_fin" name="fecha_fin" required>
-
-            <button class="btn btn-primary" onclick="guardarRetrospectiva(event)">Guardar</button>
-        </form>
-    </div>
-
-    <div id="historial" class="vista" style="display: none;">
-        <h2>Historial de Sprint</h2>
-        <div id="lista-historial">
-            <p>No se han registrado Sprint aún.</p>
+    <div id="inicio" class="vista active">
+        <h2>Bienvenido a RetroSpect</h2>
+        <p>Comienza gestionando tus sprints y retrospectivas para mejorar continuamente tus procesos ágiles.</p>
+        <div class="card">
+            <h3>¿Cómo funciona?</h3>
+            <p>1. Crea un nuevo sprint con fechas de inicio y fin</p>
+            <p>2. Añade comentarios y observaciones durante el sprint</p>
+            <p>3. Revisa el historial y genera reportes</p>
         </div>
     </div>
 
-    <div id="crear-retro-item" class="vista" style="display: none;">
+    <div id="nueva" class="vista">
+        <h2>Crear Nuevo Sprint</h2>
+        <form id="form-retrospectiva">
+            <div class="form-group">
+                <label for="nombre">Nombre del Sprint</label>
+                <input type="text" id="nombre" name="nombre" placeholder="Ejemplo: Sprint 1 - Mejoras UX" required>
+            </div>
+
+            <div class="form-group">
+                <label for="fecha_inicio">Fecha de Inicio</label>
+                <input type="date" id="fecha_inicio" name="fecha_inicio" required>
+                <small class="text-muted">Debe ser antes de la fecha de fin</small>
+            </div>
+
+            <div class="form-group">
+                <label for="fecha_fin">Fecha de Fin</label>
+                <input type="date" id="fecha_fin" name="fecha_fin" required>
+                <small class="text-muted">Debe ser después de la fecha de inicio</small>
+            </div>
+
+            <button type="button" class="btn btn-primary" onclick="guardarRetrospectiva(event)">Guardar Sprint</button>
+        </form>
+    </div>
+
+    <div id="historial" class="vista">
+        <h2>Historial de Sprints</h2>
+        <div id="lista-historial">
+            <div class="empty-state">
+                <p>No hay sprints registrados todavía</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="crear-retro-item" class="vista">
         <h2>Añadir Comentario al Sprint</h2>
         <form id="form-retro-item" onsubmit="guardarRetrospectivacome(event)">
-            <label for="sprint_id">Selecciona el Sprint</label>
-            <select id="sprint_id" name="sprint_id" required>
-                <option value="">-- Selecciona --</option>
+            <div class="form-group">
+                <label for="sprint_id">Selecciona el Sprint</label>
+                <select id="sprint_id" name="sprint_id" required>
+                    <option value="">-- Selecciona un sprint --</option>
+                </select>
+            </div>
 
-            </select>
-
-            <label for="categoria">Categoría</label>
-            <select id="categoria" name="categoria" required>
-                <option value="">-- Selecciona --</option>
-                <option value="accion">Acción</option>
-                <option value="logro">Logro</option>
-                <option value="impedimento">Impedimento</option>
-                <option value="comentario">Comentario</option>
-                <option value="otro">Otro</option>
-            </select>
+            <div class="form-group">
+                <label for="categoria">Categoría</label>
+                <select id="categoria" name="categoria" required>
+                    <option value="">-- Selecciona categoría --</option>
+                    <option value="accion">Acción</option>
+                    <option value="logro">Logro</option>
+                    <option value="impedimento">Impedimento</option>
+                    <option value="comentario">Comentario</option>
+                    <option value="otro">Otro</option>
+                </select>
+            </div>
 
             <div id="campos-extra" style="display: none;">
-                <label for="descripcion">Descripción</label>
-                <textarea id="descripcion" name="descripcion" required></textarea>
+                <div class="form-group">
+                    <label for="descripcion">Descripción</label>
+                    <textarea id="descripcion" name="descripcion" rows="4" required></textarea>
+                </div>
 
-
-
-                <label for="fecha_revision">Fecha de Revisión (opcional)</label>
-                <input type="date" id="fecha_revision" name="fecha_revision">
+                <div class="form-group">
+                    <label for="fecha_revision">Fecha de Revisión (opcional)</label>
+                    <input type="date" id="fecha_revision" name="fecha_revision">
+                </div>
 
                 <button type="submit" class="btn btn-primary">Guardar Comentario</button>
             </div>
         </form>
     </div>
-</div>
 
-<div id="reporte" class="vista" style="display: none;">
-    <h2>Reporte de Comentarios por Retrospectiva</h2>
-    <div id="reporte-comentarios">
-        <p>Cargando comentarios...</p>
-
+    <div id="reporte" class="vista">
+        <h2>Reporte de Comentarios</h2>
+        <div id="reporte-comentarios">
+            <div class="empty-state">
+                <p>Selecciona un sprint para ver su reporte</p>
+            </div>
+        </div>
     </div>
-
-
 </div>
-
 
 <script>
+    function mostrarVista(vistaId) {
+        document.querySelectorAll('.vista').forEach(vista => {
+            vista.classList.remove('active');
+        });
+
+
+        document.getElementById(vistaId).classList.add('active');
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
         try {
             const data = await fetchSprints();
             const select = document.getElementById('sprint_id');
+
+            select.innerHTML = '<option value="">-- Selecciona un sprint --</option>';
+
             data.forEach(sprint => {
                 const option = document.createElement('option');
                 option.value = sprint.id;
@@ -105,21 +139,33 @@
                 select.appendChild(option);
             });
         } catch (e) {
-            console.error("No se pudo cargar el listado de sprints.");
+            console.error("Error al cargar sprints:", e);
         }
 
         const categoriaSelect = document.getElementById('categoria');
         const camposExtra = document.getElementById('campos-extra');
 
         categoriaSelect.addEventListener('change', () => {
-            if (categoriaSelect.value) {
-                camposExtra.style.display = 'block';
-            } else {
-                camposExtra.style.display = 'none';
-            }
+            camposExtra.style.display = categoriaSelect.value ? 'block' : 'none';
         });
     });
-</script>
 
+    function guardarRetrospectiva(e) {
+        e.preventDefault();
+        console.log("Guardando sprint...");
+    }
+
+    function guardarRetrospectivacome(e) {
+        e.preventDefault();
+        console.log("Guardando comentario...");
+    }
+
+    async function fetchSprints() {
+        return [
+            {id: 1, nombre: "Sprint 1 - Inicio del proyecto"},
+            {id: 2, nombre: "Sprint 2 - Desarrollo inicial"}
+        ];
+    }
+</script>
 </body>
 </html>

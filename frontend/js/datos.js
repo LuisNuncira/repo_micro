@@ -96,28 +96,54 @@ async function guardarRetrospectiva(event) {
     const fechaFin = document.getElementById('fecha_fin').value;
 
     if (!sprint) {
-        alert('Por favor, ingresa el número del sprint.');
+        alert('Por favor, ingresa el nombre del sprint.');
         return;
     }
     if (!fechaInicio || !fechaFin) {
         alert('Por favor, ingresa las fechas de inicio y fin');
         return;
     }
-    console.log({
-        nombre: sprint,
-        fecha_inicio: fechaInicio,
-        fecha_fin: fechaFin,
-    });
+    if (new Date(fechaFin) <= new Date(fechaInicio)) {
+        alert('La fecha de fin debe ser posterior a la fecha de inicio');
+        return;
+    }
 
-    await axios.post('sprints', {
-        nombre: sprint.trim(sprint),
-        fecha_inicio: fechaInicio,
-        fecha_fin: fechaFin,
-    });
+    try {
+        const response = await axios.post('sprints', {
+            nombre: sprint.trim(),
+            fecha_inicio: fechaInicio,
+            fecha_fin: fechaFin,
+        });
 
-    alert('¡Retrospectiva creada exitosamente!');
-    document.getElementById('form-retrospectiva').reset();
-    mostrarVista('historial');
+        const nuevoSprintId = response.data.id;
+
+        alert('¡Sprint creado exitosamente!');
+        document.getElementById('form-retrospectiva').reset();
+
+        if (window.sprintBaseData) {
+            await axios.post('/sprint-relations', {
+                new_sprint_id: nuevoSprintId,
+                base_sprint_id: window.sprintBaseData.id
+            });
+
+            delete window.sprintBaseData;
+
+            setTimeout(() => {
+                mostrarVista('crear-retro-item');
+                document.getElementById('sprint_id').value = nuevoSprintId;
+                mostrarComentariosAnteriores(window.sprintBaseData.id);
+            }, 500);
+        } else {
+            mostrarVista('historial');
+            loadHistorial();
+        }
+
+        cargarSelectSprints();
+
+    } catch (error) {
+        console.error('Error al crear sprint:', error);
+        alert('Error al crear el sprint: ' + (error.response?.data?.message || error.message));
+    }
 }
 
 async function eliminarRetrospectiva(id) {
@@ -181,13 +207,8 @@ async function guardarRetrospectivacome(event) {
 
         alert('¡Item de retrospectiva guardado exitosamente!');
         document.getElementById('form-retrospectiva').reset();
-
-        if (typeof mostrarVista === 'function') {
-            mostrarVista('historial');
-        }
-
+        location.reload();
         return response.data;
-
     } catch (error) {
         console.error('Error al guardar la retrospectiva:', error);
 
@@ -208,24 +229,62 @@ async function guardarRetrospectivacome(event) {
     }
 }
 
-function mostrarCamposAdicionales() {
-    const categoria = document.getElementById('categoria').value;
-    const campos = document.getElementById('campos-adicionales');
+async function mostrarComentariosAnteriores(sprintBaseId) {
+    try {
+        const response = await axios.get(`sprints/${sprintBaseId}/retro-items`);
+        const comentarios = response.data;
 
-    if (categoria !== '') {
-        campos.style.display = 'block';
-    } else {
-        campos.style.display = 'none';
+        const contenedor = document.createElement('div');
+        contenedor.id = 'comentarios-anteriores';
+        contenedor.innerHTML = '<h3>Comentarios del Sprint Anterior</h3>';
+
+        if (comentarios.length === 0) {
+            contenedor.innerHTML += '<p>No hay comentarios en el sprint anterior.</p>';
+            return;
+        }
+
+        const lista = document.createElement('ul');
+        lista.style.listStyleType = 'none';
+        lista.style.padding = '0';
+
+        comentarios.forEach(comentario => {
+            const item = document.createElement('li');
+            item.style.marginBottom = '15px';
+            item.style.padding = '10px';
+            item.style.backgroundColor = '#f5f5f5';
+            item.style.borderRadius = '5px';
+            item.innerHTML = `
+                <strong>Categoría:</strong> ${comentario.categoria}<br>
+                <strong>Descripción:</strong> ${comentario.descripcion}<br>
+                ${comentario.fecha_revision ? `<strong>Revisión:</strong> ${comentario.fecha_revision}<br>` : ''}
+                <strong>Estado:</strong> ${comentario.cumplida ? '✅ Cumplida' : '❌ No cumplida'}
+            `;
+            lista.appendChild(item);
+        });
+
+        contenedor.appendChild(lista);
+
+        const form = document.getElementById('form-retro-item');
+        form.parentNode.insertBefore(contenedor, form.nextSibling);
+
+    } catch (error) {
+        console.error('Error al cargar comentarios anteriores:', error);
     }
 }
 
 function irAComentarios(sprintId) {
+    const comentariosAnteriores = document.getElementById('comentarios-anteriores');
+    if (comentariosAnteriores) {
+        comentariosAnteriores.remove();
+    }
+
     mostrarVista('crear-retro-item');
 
     setTimeout(() => {
         const select = document.getElementById('sprint_id');
         if (select) {
             select.value = sprintId;
+            select.disabled = true;
         }
     }, 500);
 }
@@ -247,12 +306,13 @@ async function cargarReporteComentarios() {
 
             const bloque = document.createElement('div');
             bloque.classList.add('card');
+            bloque.style.marginBottom = '20px';
             bloque.innerHTML = `<h3>${sprint.nombre}</h3>`;
 
-            // Botón para crear nuevo sprint basado en este
             const btnCrearNuevoSprint = document.createElement('button');
             btnCrearNuevoSprint.textContent = '➕ Crear nuevo sprint basado en este';
             btnCrearNuevoSprint.classList.add('btn', 'btn-secondary');
+            btnCrearNuevoSprint.style.marginBottom = '15px';
             btnCrearNuevoSprint.addEventListener('click', () => {
                 abrirFormularioNuevoSprint(sprint);
             });
@@ -262,8 +322,15 @@ async function cargarReporteComentarios() {
                 bloque.innerHTML += '<p>No hay comentarios registrados para este sprint.</p>';
             } else {
                 const lista = document.createElement('ul');
+                lista.style.listStyleType = 'none';
+                lista.style.padding = '0';
+
                 items.forEach(item => {
                     const li = document.createElement('li');
+                    li.style.marginBottom = '10px';
+                    li.style.padding = '10px';
+                    li.style.backgroundColor = '#f8f9fa';
+                    li.style.borderRadius = '5px';
                     li.innerHTML = `
                         <strong>Categoría:</strong> ${item.categoria}<br>
                         <strong>Descripción:</strong> ${item.descripcion}<br>
@@ -310,13 +377,134 @@ async function cargarReporteComentarios() {
     }
 }
 
-function abrirFormularioNuevoSprint(sprintBase) {
+
+async function abrirFormularioNuevoSprint(sprintBase) {
+    mostrarVista('nueva');
+
+    window.sprintBaseData = {
+        id: sprintBase.id,
+        nombre: sprintBase.nombre
+    };
+
+    document.getElementById('nombre').value = `Continuación de ${sprintBase.nombre}`;
+    document.getElementById('fecha_inicio').focus();
+}
+
+async function guardarRetrospectiva(event) {
+    event.preventDefault();
+
+    const sprint = document.getElementById('nombre').value;
+    const fechaInicio = document.getElementById('fecha_inicio').value;
+    const fechaFin = document.getElementById('fecha_fin').value;
+
+    if (!sprint) {
+        alert('Por favor, ingresa el nombre del sprint.');
+        return;
+    }
+    if (!fechaInicio || !fechaFin) {
+        alert('Por favor, ingresa las fechas de inicio y fin');
+        return;
+    }
+    if (new Date(fechaFin) <= new Date(fechaInicio)) {
+        alert('La fecha de fin debe ser posterior a la fecha de inicio');
+        return;
+    }
+
+    try {
+        const response = await axios.post('sprints', {
+            nombre: sprint.trim(),
+            fecha_inicio: fechaInicio,
+            fecha_fin: fechaFin,
+        });
+
+        const nuevoSprintId = response.data.id;
+
+        alert('¡Sprint creado exitosamente!');
+        document.getElementById('form-retrospectiva').reset();
+
+        if (window.sprintBaseData) {
+            setTimeout(() => {
+                mostrarVista('crear-retro-item');
+                document.getElementById('sprint_id').value = nuevoSprintId;
+                mostrarComentariosAnteriores(window.sprintBaseData.id);
+
+                delete window.sprintBaseData;
+            }, 500);
+        } else {
+            mostrarVista('historial');
+            loadHistorial();
+        }
+
+        cargarSelectSprints();
+
+    } catch (error) {
+        console.error('Error al crear sprint:', error);
+        alert('Error al crear el sprint: ' + (error.response?.data?.message || error.message));
+    }
+}
+
+async function mostrarComentariosAnteriores(sprintBaseId) {
+    try {
+        const response = await axios.get(`sprints/${sprintBaseId}/retro-items`);
+        const comentarios = response.data;
+
+        const contenedor = document.createElement('div');
+        contenedor.id = 'comentarios-anteriores';
+        contenedor.style.margin = '20px 0';
+        contenedor.style.padding = '15px';
+        contenedor.style.backgroundColor = '#f8f9fa';
+        contenedor.style.borderRadius = '5px';
+        contenedor.style.border = '1px solid #ddd';
+
+        contenedor.innerHTML = '<h3 style="margin-top: 0;">Comentarios del Sprint Anterior</h3>';
+
+        if (comentarios.length === 0) {
+            contenedor.innerHTML += '<p>No hay comentarios en el sprint anterior.</p>';
+        } else {
+            const lista = document.createElement('ul');
+            lista.style.listStyleType = 'none';
+            lista.style.padding = '0';
+
+            comentarios.forEach(comentario => {
+                const item = document.createElement('li');
+                item.style.marginBottom = '15px';
+                item.style.padding = '10px';
+                item.style.backgroundColor = '#fff';
+                item.style.borderRadius = '5px';
+                item.style.border = '1px solid #eee';
+                item.innerHTML = `
+                    <strong>Categoría:</strong> ${comentario.categoria}<br>
+                    <strong>Descripción:</strong> ${comentario.descripcion}<br>
+                    ${comentario.fecha_revision ? `<strong>Revisión:</strong> ${comentario.fecha_revision}<br>` : ''}
+                    <strong>Estado:</strong> ${comentario.cumplida ? '✅ Cumplida' : '❌ No cumplida'}
+                `;
+                lista.appendChild(item);
+            });
+
+            contenedor.appendChild(lista);
+        }
+
+        const form = document.getElementById('form-retro-item');
+        form.parentNode.insertBefore(contenedor, form.nextSibling);
+
+    } catch (error) {
+        console.error('Error al cargar comentarios anteriores:', error);
+    }
+}
+
+function irAComentarios(sprintId) {
+    const comentariosAnteriores = document.getElementById('comentarios-anteriores');
+    if (comentariosAnteriores) {
+        comentariosAnteriores.remove();
+    }
+
     mostrarVista('crear-retro-item');
 
-    document.getElementById('nombre').value = sprintBase.nombre + ' - copia';
-    document.getElementById('fecha_inicio').value = sprintBase.fecha_inicio;
-    document.getElementById('fecha_fin').value = sprintBase.fecha_fin;
-
-
+    setTimeout(() => {
+        const select = document.getElementById('sprint_id');
+        if (select) {
+            select.value = sprintId;
+        }
+    }, 500);
 }
 
