@@ -88,63 +88,7 @@ async function loadHistorial() {
     }
 }
 
-async function guardarRetrospectiva(event) {
-    event.preventDefault();
 
-    const sprint = document.getElementById('nombre').value;
-    const fechaInicio = document.getElementById('fecha_inicio').value;
-    const fechaFin = document.getElementById('fecha_fin').value;
-
-    if (!sprint) {
-        alert('Por favor, ingresa el nombre del sprint.');
-        return;
-    }
-    if (!fechaInicio || !fechaFin) {
-        alert('Por favor, ingresa las fechas de inicio y fin');
-        return;
-    }
-    if (new Date(fechaFin) <= new Date(fechaInicio)) {
-        alert('La fecha de fin debe ser posterior a la fecha de inicio');
-        return;
-    }
-
-    try {
-        const response = await axios.post('sprints', {
-            nombre: sprint.trim(),
-            fecha_inicio: fechaInicio,
-            fecha_fin: fechaFin,
-        });
-
-        const nuevoSprintId = response.data.id;
-
-        alert('¡Sprint creado exitosamente!');
-        document.getElementById('form-retrospectiva').reset();
-
-        if (window.sprintBaseData) {
-            await axios.post('/sprint-relations', {
-                new_sprint_id: nuevoSprintId,
-                base_sprint_id: window.sprintBaseData.id
-            });
-
-            delete window.sprintBaseData;
-
-            setTimeout(() => {
-                mostrarVista('crear-retro-item');
-                document.getElementById('sprint_id').value = nuevoSprintId;
-                mostrarComentariosAnteriores(window.sprintBaseData.id);
-            }, 500);
-        } else {
-            mostrarVista('historial');
-            loadHistorial();
-        }
-
-        cargarSelectSprints();
-
-    } catch (error) {
-        console.error('Error al crear sprint:', error);
-        alert('Error al crear el sprint: ' + (error.response?.data?.message || error.message));
-    }
-}
 
 async function eliminarRetrospectiva(id) {
     if (confirm('¿Estás seguro de eliminar esta retrospectiva?')) {
@@ -227,66 +171,6 @@ async function guardarRetrospectivacome(event) {
             alert('Error de conexión. Por favor, verifica tu conexión a internet.');
         }
     }
-}
-
-async function mostrarComentariosAnteriores(sprintBaseId) {
-    try {
-        const response = await axios.get(`sprints/${sprintBaseId}/retro-items`);
-        const comentarios = response.data;
-
-        const contenedor = document.createElement('div');
-        contenedor.id = 'comentarios-anteriores';
-        contenedor.innerHTML = '<h3>Comentarios del Sprint Anterior</h3>';
-
-        if (comentarios.length === 0) {
-            contenedor.innerHTML += '<p>No hay comentarios en el sprint anterior.</p>';
-            return;
-        }
-
-        const lista = document.createElement('ul');
-        lista.style.listStyleType = 'none';
-        lista.style.padding = '0';
-
-        comentarios.forEach(comentario => {
-            const item = document.createElement('li');
-            item.style.marginBottom = '15px';
-            item.style.padding = '10px';
-            item.style.backgroundColor = '#f5f5f5';
-            item.style.borderRadius = '5px';
-            item.innerHTML = `
-                <strong>Categoría:</strong> ${comentario.categoria}<br>
-                <strong>Descripción:</strong> ${comentario.descripcion}<br>
-                ${comentario.fecha_revision ? `<strong>Revisión:</strong> ${comentario.fecha_revision}<br>` : ''}
-                <strong>Estado:</strong> ${comentario.cumplida ? '✅ Cumplida' : '❌ No cumplida'}
-            `;
-            lista.appendChild(item);
-        });
-
-        contenedor.appendChild(lista);
-
-        const form = document.getElementById('form-retro-item');
-        form.parentNode.insertBefore(contenedor, form.nextSibling);
-
-    } catch (error) {
-        console.error('Error al cargar comentarios anteriores:', error);
-    }
-}
-
-function irAComentarios(sprintId) {
-    const comentariosAnteriores = document.getElementById('comentarios-anteriores');
-    if (comentariosAnteriores) {
-        comentariosAnteriores.remove();
-    }
-
-    mostrarVista('crear-retro-item');
-
-    setTimeout(() => {
-        const select = document.getElementById('sprint_id');
-        if (select) {
-            select.value = sprintId;
-            select.disabled = true;
-        }
-    }, 500);
 }
 
 async function cargarReporteComentarios() {

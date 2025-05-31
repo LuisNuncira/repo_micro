@@ -90,12 +90,12 @@
             </div>
 
             <div id="campos-extra" style="display: none;">
-                <div class="form-group">
+                <div class="form-group" id="campo-descripcion">
                     <label for="descripcion">Descripción</label>
                     <textarea id="descripcion" name="descripcion" rows="4" required></textarea>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" id="campo-fecha">
                     <label for="fecha_revision">Fecha de Revisión (opcional)</label>
                     <input type="date" id="fecha_revision" name="fecha_revision">
                 </div>
@@ -144,9 +144,27 @@
 
         const categoriaSelect = document.getElementById('categoria');
         const camposExtra = document.getElementById('campos-extra');
+        const campoDescripcion = document.getElementById('campo-descripcion');
+        const campoFecha = document.getElementById('campo-fecha');
 
         categoriaSelect.addEventListener('change', () => {
-            camposExtra.style.display = categoriaSelect.value ? 'block' : 'none';
+            const valor = categoriaSelect.value;
+
+            if (!valor) {
+                camposExtra.style.display = 'none';
+                return;
+            }
+
+            // Mostrar el contenedor general y el campo de descripción
+            camposExtra.style.display = 'block';
+            campoDescripcion.style.display = 'block';
+
+            // Mostrar u ocultar campo de fecha según la categoría
+            if (valor === 'accion' || valor === 'impedimento') {
+                campoFecha.style.display = 'block';
+            } else {
+                campoFecha.style.display = 'none';
+            }
         });
     });
 
